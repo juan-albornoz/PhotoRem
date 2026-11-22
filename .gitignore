@@ -1,0 +1,20 @@
+# Dependencias y compilados
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Generados por el procesado de fotos (se regeneran desde los originales)
+media/
+data/
+
+# Pruebas
+playwright-report/
+test-results/
+coverage/
+
+# Entorno y sistema
+.env
+.env.*
+.DS_Store
+Thumbs.db
+*.log
