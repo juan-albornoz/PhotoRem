@@ -1,7 +1,7 @@
 /*
  * Variables de diseño. Paleta inspirada en el Camino, usada con contención:
  * piedra y ocre de la meseta, verde gallego y azul atlántico para el epílogo,
- * amarillo flecha solo como acento. La tipografía definitiva (Cormorant Garamond + Inter) llega en la F2.
+ * amarillo flecha solo como acento.
  */
 :root {
   --color-paper: #f7f4ee;
@@ -10,12 +10,16 @@
   --color-stone-600: #6b6156;
   --color-ink: #2a2622;
   --color-ochre: #9a6a24;
+  /* Ocre oscuro para texto claro sobre ocre: contraste 6,4:1 con el papel (AA). */
+  --color-ochre-dark: #7a5218;
   --color-galician-green: #3d6a4c;
   --color-atlantic-blue: #2c5a78;
   --color-arrow-yellow: #f2c230;
   --color-danger: #9b2c2c;
 
-  --font-serif: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  /* Títulos condensados en mayúsculas, como la plantilla de referencia; texto en Inter (ambas OFL). */
+  --font-display: Oswald, 'Arial Narrow', sans-serif;
+  --font-serif: var(--font-display);
   --font-sans: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 
   --space-1: 0.25rem;

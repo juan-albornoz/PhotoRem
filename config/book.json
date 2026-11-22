@@ -1,0 +1,81 @@
+{
+  "meta": {
+    "title": "Camino Francés",
+    "subtitle": "De Burgos a Muxía",
+    "author": "",
+    "dates": "Octubre – noviembre 2026"
+  },
+  "format": {
+    "widthMm": 297,
+    "heightMm": 210,
+    "marginMm": 14,
+    "gutterMm": 18,
+    "gapMm": 4,
+    "bleedMm": 0
+  },
+  "tripStartDate": "2026-10-06",
+  "photos": {
+    "cover": "iphone/IMG_4304",
+    "intro": "iphone/IMG_5554",
+    "sections": {
+      "camino": "canon/100CANON/_MG_9971",
+      "epilogo": "iphone/IMG_6247"
+    }
+  },
+  "sections": {
+    "camino": {
+      "intro": "Del 5 al 31 de octubre de 2026, de Burgos a Santiago de Compostela: la meseta, los montes de León, El Bierzo y Galicia, paso a paso."
+    },
+    "epilogo": {
+      "intro": "Después de Santiago, el mar. De Fisterra a Muxía, a pie, hasta el fin de la tierra."
+    }
+  },
+  "places": {
+    "burgos": {
+      "summary": "La noche del 5 de octubre llegamos a Burgos y la Catedral iluminada fue la primera imagen del viaje. A la mañana siguiente empezamos a caminar: Tardajos, Hornillos y las primeras horas de meseta, con campos abiertos, molinos y cielos enormes."
+    },
+    "castrojeriz": {
+      "summary": "Castrojeriz se ve desde lejos, alargado al pie de su castillo. Nos quedamos dos noches: el día de descanso subimos al castillo y al Alto de Mostelares para mirar la meseta desde arriba."
+    },
+    "fromista": {
+      "summary": "Llegamos a Frómista al atardecer. A primera hora del día siguiente, el sol bajo encendió la piedra de San Martín, una de las iglesias románicas más bellas del Camino."
+    },
+    "carrion": {
+      "summary": "De Frómista a Carrión de los Condes por Tierra de Campos. Al día siguiente, la calzada romana: kilómetros rectos hacia Calzadilla de la Cueza, sin un solo pueblo en medio."
+    },
+    "sahagun": {
+      "summary": "Sahagún nos recibió con el Arco de San Benito. Después, la senda de los peregrinos hacia El Burgo Ranero: caminos rectos a la sombra de los plátanos."
+    },
+    "leon": {
+      "summary": "León fue una pausa de dos días: la Catedral, la Plaza Mayor y las palomas de la Plaza del Grano. Al salir, el camino cruzó el páramo hacia San Martín y los pinares que llevan a Astorga."
+    },
+    "astorga": {
+      "summary": "Astorga apareció a lo lejos al final de la tarde. A la mañana siguiente, el Palacio de Gaudí y la Catedral; después, el camino hacia Rabanal, cada vez más cerca de las montañas."
+    },
+    "cruz-de-ferro": {
+      "summary": "Subimos a Foncebadón con la primera luz y llegamos a la Cruz de Ferro, donde los peregrinos dejan su piedra. Después, la bajada larga hasta El Acebo y Molinaseca, entre brezos y colores de otoño."
+    },
+    "ponferrada": {
+      "summary": "Ponferrada y su castillo templario. Desde allí, El Bierzo: castaños, viñas y pueblos de piedra camino de Villafranca y de las primeras cuestas hacia Galicia."
+    },
+    "o-cebreiro": {
+      "summary": "La subida a O Cebreiro nos llevó a Galicia entre nieblas y casas de piedra con techo de paja. Después, Fonfría y la bajada hacia Triacastela, entre castaños centenarios."
+    },
+    "sarria": {
+      "summary": "Salimos de Sarria con el amanecer sobre los prados y la niebla dormida en el valle. Desde aquí el Camino se llena de peregrinos."
+    },
+    "portomarin": {
+      "summary": "Portomarín, sobre el embalse del Miño, con su iglesia-fortaleza de San Nicolás. Luego, cuatro días por Palas de Rei, Melide y Arzúa, entre eucaliptos y robles, contando los últimos kilómetros."
+    },
+    "santiago": {
+      "summary": "El 31 de octubre llegamos a Santiago y a la plaza del Obradoiro. Nos quedamos dos días recorriendo sus calles de piedra antes de seguir hacia el mar."
+    },
+    "fisterra": {
+      "summary": "Desde Fisterra caminamos hacia el norte, entre aldeas con hórreos, eucaliptos y molinos, pasando por Lires. Poco más de treinta kilómetros para terminar en Muxía."
+    },
+    "muxia": {
+      "summary": "Muxía, el final: el Santuario da Barca, el faro, las rocas y el Atlántico. Un atardecer sobre el mar para cerrar el Camino."
+    }
+  },
+  "colophon": "Fotografías hechas con una Canon EOS 80D con Tamron 70-300 y un iPhone 16 Pro Max entre el 5 de octubre y el 4 de noviembre de 2026. Maquetado con PhotoRem."
+}

@@ -3,9 +3,11 @@ node_modules/
 dist/
 *.tsbuildinfo
 
-# Generados por el procesado de fotos (se regeneran desde los originales)
+# Generados por el procesado de fotos (se regeneran desde los originales con «npm run photos»)
 media/
-data/
+data/*
+# …salvo tu selección, que no se puede regenerar: se guarda en git
+!data/selection.json
 
 # Pruebas
 playwright-report/

@@ -1,0 +1,128 @@
+{
+  "sections": [
+    { "id": "camino", "title": "Camino Francés" },
+    { "id": "epilogo", "title": "Epílogo: Fisterra y Muxía" }
+  ],
+  "places": [
+    {
+      "id": "burgos",
+      "name": "Burgos",
+      "section": "camino",
+      "lat": 42.3405,
+      "lon": -3.7042,
+      "radiusKm": 3
+    },
+    {
+      "id": "castrojeriz",
+      "name": "Castrojeriz",
+      "section": "camino",
+      "lat": 42.2883,
+      "lon": -4.1386,
+      "radiusKm": 2
+    },
+    {
+      "id": "fromista",
+      "name": "Frómista",
+      "section": "camino",
+      "lat": 42.2675,
+      "lon": -4.406,
+      "radiusKm": 2
+    },
+    {
+      "id": "carrion",
+      "name": "Carrión de los Condes",
+      "section": "camino",
+      "lat": 42.3375,
+      "lon": -4.6025,
+      "radiusKm": 2
+    },
+    {
+      "id": "sahagun",
+      "name": "Sahagún",
+      "section": "camino",
+      "lat": 42.3711,
+      "lon": -5.0297,
+      "radiusKm": 2
+    },
+    {
+      "id": "leon",
+      "name": "León",
+      "section": "camino",
+      "lat": 42.5994,
+      "lon": -5.5669,
+      "radiusKm": 3
+    },
+    {
+      "id": "astorga",
+      "name": "Astorga",
+      "section": "camino",
+      "lat": 42.4575,
+      "lon": -6.0561,
+      "radiusKm": 2
+    },
+    {
+      "id": "cruz-de-ferro",
+      "name": "Cruz de Ferro",
+      "section": "camino",
+      "lat": 42.4889,
+      "lon": -6.3614,
+      "radiusKm": 1
+    },
+    {
+      "id": "ponferrada",
+      "name": "Ponferrada",
+      "section": "camino",
+      "lat": 42.545,
+      "lon": -6.59,
+      "radiusKm": 2.5
+    },
+    {
+      "id": "o-cebreiro",
+      "name": "O Cebreiro",
+      "section": "camino",
+      "lat": 42.7078,
+      "lon": -7.0434,
+      "radiusKm": 1.5
+    },
+    {
+      "id": "sarria",
+      "name": "Sarria",
+      "section": "camino",
+      "lat": 42.7808,
+      "lon": -7.4142,
+      "radiusKm": 2
+    },
+    {
+      "id": "portomarin",
+      "name": "Portomarín",
+      "section": "camino",
+      "lat": 42.8075,
+      "lon": -7.6158,
+      "radiusKm": 2
+    },
+    {
+      "id": "santiago",
+      "name": "Santiago de Compostela",
+      "section": "camino",
+      "lat": 42.8806,
+      "lon": -8.5446,
+      "radiusKm": 3
+    },
+    {
+      "id": "fisterra",
+      "name": "Fisterra",
+      "section": "epilogo",
+      "lat": 42.905,
+      "lon": -9.2636,
+      "radiusKm": 3
+    },
+    {
+      "id": "muxia",
+      "name": "Muxía",
+      "section": "epilogo",
+      "lat": 43.1036,
+      "lon": -9.2172,
+      "radiusKm": 2
+    }
+  ]
+}

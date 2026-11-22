@@ -1,0 +1,22 @@
+{
+  "fromista": {
+    "note": "Revisión visual del 2026-11-22: dos tomas casi iguales de San Martín (09:11); se cambia una por la vista general con luz de mañana.",
+    "add": ["iphone/IMG_4528"],
+    "remove": ["iphone/IMG_4546"]
+  },
+  "leon": {
+    "note": "Revisión visual del 2026-11-22 (tras equilibrar Canon/iPhone): la Catedral había quedado fuera; sale una de las dos fotos de la fuente con palomas.",
+    "add": ["iphone/IMG_4751"],
+    "remove": ["canon/101CANON/_MG_0087"]
+  },
+  "cruz-de-ferro": {
+    "note": "Revisión visual del 2026-11-22: vuelve la Ermita de Santiago junto a la cruz y sale la foto de la valla.",
+    "add": ["iphone/IMG_5006"],
+    "remove": ["canon/101CANON/_MG_0389"]
+  },
+  "muxia": {
+    "note": "Revisión visual del 2026-11-22: el Santuario da Barca no estaba en la sugerencia.",
+    "add": ["iphone/IMG_6268"],
+    "remove": ["iphone/IMG_6269"]
+  }
+}

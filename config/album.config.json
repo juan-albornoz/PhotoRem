@@ -1,0 +1,13 @@
+{
+  "sources": {
+    "canon": "../Canon",
+    "iphone": "../Telefono"
+  },
+  "timeZone": "Europe/Madrid",
+  "canonClockCorrectionSeconds": 48,
+  "preselection": {
+    "candidatesPerPlace": 20,
+    "selectedPerPlace": 10,
+    "minFocus": 5
+  }
+}
