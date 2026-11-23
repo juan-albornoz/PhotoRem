@@ -199,4 +199,53 @@ test.describe('libro (modo lectura)', () => {
     expect((await download).suggestedFilename()).toBe('camino-frances.pdf');
     await expect(page.getByText(/PDF listo/)).toBeVisible();
   });
+
+  test('suena una hoja al pasar página (normal y a pantalla completa) y el altavoz la silencia', async ({
+    page,
+  }) => {
+    // Cuenta las fuentes de sonido que crea la página (cada hoja crea varias).
+    await page.addInitScript(() => {
+      const w = window as unknown as { __sonidos: number };
+      w.__sonidos = 0;
+      AudioContext.prototype.createBufferSource = function (this: AudioContext) {
+        w.__sonidos += 1;
+        return BaseAudioContext.prototype.createBufferSource.call(this);
+      };
+    });
+    const sounds = (): Promise<number> =>
+      page.evaluate(() => (window as unknown as { __sonidos: number }).__sonidos);
+    await mockApi(page);
+    await page.goto('/#/libro');
+    await expect(page.getByRole('article', { name: 'Portada' })).toBeVisible();
+    expect(await sounds()).toBe(0); // nada suena al abrir el libro
+
+    await page.getByRole('button', { name: 'Página siguiente' }).click();
+    await expect.poll(sounds).toBeGreaterThan(0);
+
+    await page.getByRole('button', { name: 'Ver el libro a pantalla completa' }).click();
+    await expect
+      .poll(() => page.evaluate(() => document.fullscreenElement?.className ?? ''))
+      .toContain('book-stage');
+    const before = await sounds();
+    await page.keyboard.press('ArrowRight');
+    await expect.poll(sounds).toBeGreaterThan(before);
+    await page.keyboard.press('Escape');
+
+    await page.getByRole('button', { name: 'Sonido al pasar página' }).click();
+    await expect(page.getByRole('button', { name: 'Sonido al pasar página' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+    const muted = await sounds();
+    await page.getByRole('button', { name: 'Página siguiente' }).click();
+    await page.waitForTimeout(200);
+    expect(await sounds()).toBe(muted);
+
+    // La preferencia se recuerda al volver a abrir el libro.
+    await page.reload();
+    await expect(page.getByRole('button', { name: 'Sonido al pasar página' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+  });
 });

@@ -316,13 +316,23 @@
   visibility: hidden;
 }
 
-.book-fullscreen {
+.book-fullscreen,
+.book-sound {
   position: absolute;
   top: -0.25rem;
   right: 0.25rem;
   z-index: 3;
   width: 2rem;
   height: 2rem;
+}
+
+/* El altavoz, a la izquierda del icono de pantalla completa. */
+.book-sound {
+  right: 2.5rem;
+}
+
+.book-sound[aria-pressed='false'] {
+  opacity: 0.55;
 }
 .book-toolbar__actions {
   display: flex;
@@ -429,6 +439,11 @@
 .book-stage:fullscreen .book-fullscreen {
   top: 0.75rem;
   right: 0.75rem;
+}
+
+.book-stage:fullscreen .book-sound {
+  top: 0.75rem;
+  right: 3rem;
 }
 /* — Impresión (PDF): páginas a tamaño real, una por hoja, sin sombras — */
 .print-book {

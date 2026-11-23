@@ -53,6 +53,11 @@ En el libro:
   sobre fondo oscuro. Cada foto se pide a la resolución con la que se ve (`srcset` hasta 3840 px,
   generada desde los originales y guardada en `media/sized/`), así que no pierde calidad.
 - **Flechas** a los lados del libro (y ← → en el teclado).
+- **Sonido de hoja** al pasar página (también a pantalla completa). Se sintetiza en el navegador
+  (Web Audio, sin archivos): crujido al levantar la hoja, roce del papel y asentado, con
+  movimiento de derecha a izquierda y variaciones en cada página. Saltar a un capítulo suena
+  como hojear varias. El icono del altavoz lo silencia y la preferencia se recuerda. Para medirlo:
+  `npx tsx tests/analyze-sound.ts <carpeta>` (duración, nivel, frecuencias y WAV de muestra).
 - **Reordenar fotos**: dentro de cada página, arrastra una foto sobre otra (o pulsa una y después
   la otra) para intercambiarlas. Tu orden se guarda en `data/layout.json` (en git, como tu
   selección); cada página puede volver a su orden original.

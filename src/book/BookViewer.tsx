@@ -3,7 +3,13 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import type { SelectionData, SelectionPhoto } from '../../shared/api.ts';
 import type { Book, Page, PhotoElement } from '../../shared/book.ts';
 import { BookPage, type PageEditing } from './BookPage.tsx';
-import { ChevronLeft, ChevronRight, Collapse, Expand } from './icons.tsx';
+import { ChevronLeft, ChevronRight, Collapse, Expand, SoundOff, SoundOn } from './icons.tsx';
+import {
+  createPageTurnSound,
+  readSoundPreference,
+  writeSoundPreference,
+  type PageTurnSound,
+} from './pageTurnSound.ts';
 import { useMediaQuery } from './useMediaQuery.ts';
 import { buildViews, describeView, viewIndexOf, viewPages } from './views.ts';
 
@@ -27,7 +33,18 @@ interface BookViewerProps {
   exporting?: boolean;
   /** Mensaje para lectores de pantalla y para la barra (guardado, PDF…). */
   status?: string;
+  /** Inyectable para las pruebas (por defecto, el sonido sintetizado con Web Audio). */
+  sound?: PageTurnSound;
 }
+
+/** Almacenamiento del navegador, si está disponible (no lo está en algunos modos privados). */
+const browserStorage = (): Storage | undefined => {
+  try {
+    return typeof window === 'undefined' ? undefined : window.localStorage;
+  } catch {
+    return undefined;
+  }
+};
 
 /** Páginas en las que se puede reordenar: contenido con más de una foto. */
 const reorderable = (page: Page): boolean =>
@@ -36,7 +53,7 @@ const reorderable = (page: Page): boolean =>
 /**
  * Modo lectura: doble página en pantallas anchas, página suelta en móvil. Flechas a los lados del
  * libro y en el teclado (← →, Inicio, Fin), salto a cada capítulo, pantalla completa, reordenar las
- * fotos de una página y descarga en PDF. El paso de página animado llega en la F3.
+ * fotos de una página, descarga en PDF y sonido de hoja al pasar página (con botón para silenciarlo).
  */
 export function BookViewer({
   book,
@@ -46,6 +63,7 @@ export function BookViewer({
   onExportPdf,
   exporting = false,
   status = '',
+  sound,
 }: BookViewerProps) {
   const wide = useMediaQuery('(min-width: 64rem)');
   const views = useMemo(() => buildViews(book, wide ? 'spread' : 'single'), [book, wide]);
@@ -61,13 +79,26 @@ export function BookViewer({
   const [picked, setPicked] = useState<{ pageId: string; elementId: string } | null>(null);
   const canFullscreen = typeof document !== 'undefined' && document.fullscreenEnabled;
 
-  const goTo = (target: number): void => {
-    const next = views[Math.max(0, Math.min(views.length - 1, target))];
+  // Sonido de paso de página: tu preferencia se guarda en el navegador; el motor se crea una vez.
+  const [soundOn, setSoundOn] = useState(() => readSoundPreference(browserStorage()));
+  const [engine] = useState<PageTurnSound>(() => {
+    const created = sound ?? createPageTurnSound(soundOn);
+    created.setEnabled(soundOn);
+    return created;
+  });
+
+  /** Cambia de vista y suena la hoja (solo si de verdad cambia: nunca al abrir el libro). */
+  const turnTo = (target: number, riffle = false): void => {
+    const clamped = Math.max(0, Math.min(views.length - 1, target));
+    const next = views[clamped];
     const first = next ? viewPages(next)[0] : undefined;
-    if (first) {
-      setPageId(first.id);
-      setPicked(null);
-    }
+    if (!first || clamped === index) return;
+    engine.play(clamped > index ? 'next' : 'prev', { riffle });
+    setPageId(first.id);
+    setPicked(null);
+  };
+  const goTo = (target: number): void => {
+    turnTo(target);
   };
 
   useEffect(() => {
@@ -89,9 +120,12 @@ export function BookViewer({
       const next = keys[event.key];
       if (next === undefined) return;
       event.preventDefault();
-      const view = views[Math.max(0, Math.min(views.length - 1, next))];
+      const clamped = Math.max(0, Math.min(views.length - 1, next));
+      const view = views[clamped];
       const first = view ? viewPages(view)[0] : undefined;
-      if (first) {
+      if (first && clamped !== index) {
+        // Inicio/Fin saltan muchas páginas: suena como hojear varias.
+        engine.play(clamped > index ? 'next' : 'prev', { riffle: Math.abs(clamped - index) > 1 });
         setPageId(first.id);
         setPicked(null);
       }
@@ -100,7 +134,7 @@ export function BookViewer({
     return () => {
       window.removeEventListener('keydown', onKey);
     };
-  }, [index, views]);
+  }, [index, views, engine]);
 
   useEffect(() => {
     const onChange = (): void => {
@@ -205,8 +239,8 @@ export function BookViewer({
           <select
             value={currentChapter}
             onChange={(event) => {
-              setPageId(event.target.value);
-              setPicked(null);
+              // Saltar a un capítulo suena como hojear varias páginas seguidas.
+              turnTo(viewIndexOf(views, event.target.value), true);
             }}
           >
             {chapters.map((c) => (
@@ -290,6 +324,25 @@ export function BookViewer({
       )}
 
       <div className="book-stage" ref={stageRef} data-fullscreen={fullscreen || undefined}>
+        <button
+          type="button"
+          className="book-icon-button book-sound"
+          aria-pressed={soundOn}
+          aria-label="Sonido al pasar página"
+          title={
+            soundOn ? 'Silenciar el sonido de las páginas' : 'Activar el sonido de las páginas'
+          }
+          onClick={() => {
+            const next = !soundOn;
+            engine.setEnabled(next);
+            setSoundOn(next);
+            writeSoundPreference(browserStorage(), next);
+            // Al activarlo, una hoja de muestra para que sepas cómo suena.
+            if (next) engine.play('next');
+          }}
+        >
+          {soundOn ? <SoundOn /> : <SoundOff />}
+        </button>
         {canFullscreen && (
           <button
             type="button"
