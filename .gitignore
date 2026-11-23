@@ -8,6 +8,8 @@ media/
 data/*
 # …salvo tu selección, que no se puede regenerar: se guarda en git
 !data/selection.json
+# …y tu orden de fotos por página («Reordenar fotos»)
+!data/layout.json
 
 # Pruebas
 playwright-report/

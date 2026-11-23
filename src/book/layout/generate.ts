@@ -1,17 +1,19 @@
 import type { SelectionData, SelectionPhoto } from '../../../shared/api.ts';
 import {
   BookSchema,
+  pageSignature,
   type Book,
   type BookConfig,
   type Box,
   type Page,
   type PageKind,
+  type PageOrder,
   type PhotoElement,
   type TextElement,
   type TextRole,
 } from '../../../shared/book.ts';
 import { dayRange } from '../../features/selection/logic.ts';
-import { bestTemplate, contentBox, type Side } from './templates.ts';
+import { bestTemplate, CONTENT_TEMPLATES, contentBox, type Side } from './templates.ts';
 
 /**
  * Generador del libro: convierte tu selección en páginas maquetadas. Orden: lugar → fecha → hora.
@@ -25,6 +27,8 @@ export interface GenerateInput {
   data: Pick<SelectionData, 'places' | 'sections' | 'photos'> & {
     selection: Readonly<Record<string, readonly string[]>>;
   };
+  /** Tus órdenes por página (firma → plantilla y orden). Sin ellos, orden cronológico. */
+  overrides?: Readonly<Record<string, PageOrder>>;
 }
 
 /** Elemento sin id: el id se asigna al colocarlo en su página. */
@@ -159,7 +163,7 @@ export function pickMainPhoto(photos: readonly SelectionPhoto[]): SelectionPhoto
   );
 }
 
-export function generateBook({ config, data }: GenerateInput): Book {
+export function generateBook({ config, data, overrides = {} }: GenerateInput): Book {
   const { format, meta } = config;
   const W = format.widthMm;
   const H = format.heightMm;
@@ -391,12 +395,23 @@ export function generateBook({ config, data }: GenerateInput): Book {
           );
           continue;
         }
-        const { template } = bestTemplate(
-          contentBox(format, 'left'),
-          gap,
-          aspects.slice(start - count, start),
-          previous,
-        );
+        // Tu orden para esta página (opción «Reordenar fotos»), si lo hay y sigue valiendo.
+        const custom = overrides[pageSignature(pagePhotos.map((p) => p.id))];
+        const customTemplate = custom
+          ? CONTENT_TEMPLATES.find((t) => t.id === custom.templateId && t.photoCount === count)
+          : undefined;
+        const template =
+          customTemplate ??
+          bestTemplate(
+            contentBox(format, 'left'),
+            gap,
+            aspects.slice(start - count, start),
+            previous,
+          ).template;
+        const ordered =
+          customTemplate && custom
+            ? custom.order.map((id) => pagePhotos.find((p) => p.id === id))
+            : pagePhotos;
         previous = template.id;
         push(
           'content',
@@ -404,7 +419,7 @@ export function generateBook({ config, data }: GenerateInput): Book {
           (side) => {
             const layout = template.build(contentBox(format, side), gap);
             return [
-              ...layout.photos.map((box, i) => photo(box, pagePhotos[i]?.id ?? null)),
+              ...layout.photos.map((box, i) => photo(box, ordered[i]?.id ?? null)),
               ...layout.texts.map((slot) =>
                 text(
                   slot.box,

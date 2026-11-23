@@ -125,6 +125,32 @@ export const BookSchema = z.object({
 });
 export type Book = z.infer<typeof BookSchema>;
 
+/**
+ * Orden propio de las fotos de una página (opción «Reordenar fotos»). Se guarda con la plantilla de
+ * la página para que, al cambiar el orden, la maqueta no cambie de forma inesperada.
+ */
+export const PageOrderSchema = z.object({
+  templateId: z.string().min(1),
+  order: z.array(z.string()).min(1),
+});
+export type PageOrder = z.infer<typeof PageOrderSchema>;
+
+/** Tus órdenes por página (`data/layout.json`). La clave es la firma de la página: ver `pageSignature`. */
+export const LayoutOverridesSchema = z.object({
+  version: z.literal(1),
+  updatedAt: z.string(),
+  pages: z.record(z.string(), PageOrderSchema),
+});
+export type LayoutOverrides = z.infer<typeof LayoutOverridesSchema>;
+
+/**
+ * Firma de una página: sus fotos ordenadas alfabéticamente. Si cambias la selección y la página pasa
+ * a tener otras fotos, su orden guardado deja de aplicarse (sin romper nada).
+ */
+export function pageSignature(photoIds: readonly string[]): string {
+  return [...photoIds].sort().join('|');
+}
+
 /** Contenido editable del libro (`config/book.json`): textos, fotos especiales y formato. */
 export const BookConfigSchema = z.object({
   meta: z.object({

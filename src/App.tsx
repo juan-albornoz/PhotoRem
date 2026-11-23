@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 
 import { BookScreen } from './book/BookScreen.tsx';
+import { PrintScreen } from './book/PrintScreen.tsx';
 import { SelectionPage } from './features/selection/SelectionPage.tsx';
 import { fetchHealth } from './services/api.ts';
-import { useHashRoute, type Route } from './useHashRoute.ts';
+import { routeParams, useHash, useHashRoute, type Route } from './useHashRoute.ts';
 
 type ApiState = { kind: 'checking' } | { kind: 'online'; version: string } | { kind: 'offline' };
 
@@ -18,14 +19,25 @@ function describeApi(state: ApiState): string {
   }
 }
 
-const TABS: readonly { route: Route; label: string }[] = [
+const TABS: readonly { route: Exclude<Route, 'imprimir'>; label: string }[] = [
   { route: 'libro', label: 'Libro' },
   { route: 'seleccion', label: 'Selección de fotos' },
 ];
 
 export function App() {
-  const [api, setApi] = useState<ApiState>({ kind: 'checking' });
   const route = useHashRoute();
+  const hash = useHash();
+  // Página de impresión (la usa la exportación a PDF): el libro a tamaño real, sin la interfaz.
+  if (route === 'imprimir') {
+    return (
+      <PrintScreen quality={routeParams(hash).get('calidad') === 'print' ? 'print' : 'light'} />
+    );
+  }
+  return <MainApp route={route} />;
+}
+
+function MainApp({ route }: { route: Exclude<Route, 'imprimir'> }) {
+  const [api, setApi] = useState<ApiState>({ kind: 'checking' });
 
   useEffect(() => {
     const controller = new AbortController();

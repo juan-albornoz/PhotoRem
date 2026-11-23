@@ -1,22 +1,52 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 
 import type { SelectionData, SelectionPhoto } from '../../shared/api.ts';
-import type { Book } from '../../shared/book.ts';
-import { BookPage } from './BookPage.tsx';
+import type { Book, Page, PhotoElement } from '../../shared/book.ts';
+import { BookPage, type PageEditing } from './BookPage.tsx';
+import { ChevronLeft, ChevronRight, Collapse, Expand } from './icons.tsx';
 import { useMediaQuery } from './useMediaQuery.ts';
 import { buildViews, describeView, viewIndexOf, viewPages } from './views.ts';
+
+export type PdfQuality = 'print' | 'light';
+
+export interface BookEditing {
+  /** La página tiene un orden propio guardado. */
+  isCustom: (page: Page) => boolean;
+  /** Intercambia dos fotos de la misma página. */
+  onSwap: (page: Page, a: string, b: string) => void;
+  /** Vuelve al orden automático (cronológico) de la página. */
+  onReset: (page: Page) => void;
+}
 
 interface BookViewerProps {
   book: Book;
   photosById: ReadonlyMap<string, SelectionPhoto>;
   places: SelectionData['places'];
+  editing?: BookEditing;
+  onExportPdf?: (quality: PdfQuality) => void;
+  exporting?: boolean;
+  /** Mensaje para lectores de pantalla y para la barra (guardado, PDF…). */
+  status?: string;
 }
 
+/** Páginas en las que se puede reordenar: contenido con más de una foto. */
+const reorderable = (page: Page): boolean =>
+  page.kind === 'content' && page.elements.filter((e) => e.type === 'photo').length > 1;
+
 /**
- * Modo lectura: doble página en pantallas anchas, página suelta en móvil. Flechas en pantalla y del
- * teclado (← →, Inicio, Fin) y salto directo a cada capítulo. El paso de página animado llega en la F3.
+ * Modo lectura: doble página en pantallas anchas, página suelta en móvil. Flechas a los lados del
+ * libro y en el teclado (← →, Inicio, Fin), salto a cada capítulo, pantalla completa, reordenar las
+ * fotos de una página y descarga en PDF. El paso de página animado llega en la F3.
  */
-export function BookViewer({ book, photosById, places }: BookViewerProps) {
+export function BookViewer({
+  book,
+  photosById,
+  places,
+  editing,
+  onExportPdf,
+  exporting = false,
+  status = '',
+}: BookViewerProps) {
   const wide = useMediaQuery('(min-width: 64rem)');
   const views = useMemo(() => buildViews(book, wide ? 'spread' : 'single'), [book, wide]);
   // Se recuerda la página (no el índice) para no perder el sitio al girar el móvil o cambiar el ancho.
@@ -24,17 +54,30 @@ export function BookViewer({ book, photosById, places }: BookViewerProps) {
   const index = viewIndexOf(views, pageId);
   const view = views[index] ?? views[0];
   const placeNames = useMemo(() => new Map(places.map((p) => [p.id, p.name])), [places]);
+  // Solo el libro (con sus flechas) pasa a pantalla completa, no toda la página.
+  const stageRef = useRef<HTMLDivElement>(null);
+  const [fullscreen, setFullscreen] = useState(false);
+  const [reordering, setReordering] = useState(false);
+  const [picked, setPicked] = useState<{ pageId: string; elementId: string } | null>(null);
+  const canFullscreen = typeof document !== 'undefined' && document.fullscreenEnabled;
 
   const goTo = (target: number): void => {
     const next = views[Math.max(0, Math.min(views.length - 1, target))];
     const first = next ? viewPages(next)[0] : undefined;
-    if (first) setPageId(first.id);
+    if (first) {
+      setPageId(first.id);
+      setPicked(null);
+    }
   };
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent): void => {
       const target = event.target as HTMLElement | null;
       if (target && ['INPUT', 'SELECT', 'TEXTAREA'].includes(target.tagName)) return;
+      if (event.key === 'Escape') {
+        setPicked(null);
+        return;
+      }
       const keys: Record<string, number> = {
         ArrowLeft: index - 1,
         ArrowRight: index + 1,
@@ -48,7 +91,10 @@ export function BookViewer({ book, photosById, places }: BookViewerProps) {
       event.preventDefault();
       const view = views[Math.max(0, Math.min(views.length - 1, next))];
       const first = view ? viewPages(view)[0] : undefined;
-      if (first) setPageId(first.id);
+      if (first) {
+        setPageId(first.id);
+        setPicked(null);
+      }
     };
     window.addEventListener('keydown', onKey);
     return () => {
@@ -56,7 +102,17 @@ export function BookViewer({ book, photosById, places }: BookViewerProps) {
     };
   }, [index, views]);
 
-  // Precarga de las fotos de las vistas contiguas para que pasar página sea fluido.
+  useEffect(() => {
+    const onChange = (): void => {
+      setFullscreen(document.fullscreenElement === stageRef.current);
+    };
+    document.addEventListener('fullscreenchange', onChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', onChange);
+    };
+  }, []);
+
+  // Precarga de las vistas contiguas para que pasar página sea fluido.
   useEffect(() => {
     for (const neighbour of [views[index - 1], views[index + 1]]) {
       if (!neighbour) continue;
@@ -102,21 +158,45 @@ export function BookViewer({ book, photosById, places }: BookViewerProps) {
   const currentChapter =
     [...chapters].reverse().find((c) => (positions.get(c.id) ?? 0) <= currentPosition)?.id ??
     book.cover.id;
+  const visiblePages = viewPages(view);
+  const customPages = editing ? visiblePages.filter((p) => editing.isCustom(p)) : [];
+
+  const toggleFullscreen = (): void => {
+    if (document.fullscreenElement) {
+      void document.exitFullscreen();
+    } else {
+      void stageRef.current?.requestFullscreen();
+    }
+  };
+
+  const pageEditing = (page: Page): PageEditing | undefined => {
+    if (!editing || !reordering || !reorderable(page)) return undefined;
+    return {
+      selectedElementId: picked?.pageId === page.id ? picked.elementId : null,
+      onSelect: (element: PhotoElement) => {
+        if (picked?.pageId === page.id && picked.elementId === element.id) {
+          setPicked(null);
+        } else if (picked?.pageId === page.id) {
+          editing.onSwap(page, picked.elementId, element.id);
+          setPicked(null);
+        } else {
+          setPicked({ pageId: page.id, elementId: element.id });
+        }
+      },
+      onDropOn: (from: string, to: PhotoElement) => {
+        if (page.elements.some((e) => e.id === from)) editing.onSwap(page, from, to.id);
+        setPicked(null);
+      },
+    };
+  };
+
+  const spreadStyle = {
+    '--page-ratio': String(book.format.widthMm / book.format.heightMm),
+  } as CSSProperties;
 
   return (
     <section className="book-viewer" aria-label="Libro">
       <div className="book-toolbar">
-        <button
-          type="button"
-          className="button book-toolbar__nav"
-          onClick={() => {
-            goTo(index - 1);
-          }}
-          disabled={index === 0}
-          aria-label="Página anterior"
-        >
-          ←
-        </button>
         <p className="book-toolbar__where" aria-live="polite">
           {describeView(view, book.pages.length)}
         </p>
@@ -126,6 +206,7 @@ export function BookViewer({ book, photosById, places }: BookViewerProps) {
             value={currentChapter}
             onChange={(event) => {
               setPageId(event.target.value);
+              setPicked(null);
             }}
           >
             {chapters.map((c) => (
@@ -135,26 +216,114 @@ export function BookViewer({ book, photosById, places }: BookViewerProps) {
             ))}
           </select>
         </label>
-        <button
-          type="button"
-          className="button book-toolbar__nav"
-          onClick={() => {
-            goTo(index + 1);
-          }}
-          disabled={index === views.length - 1}
-          aria-label="Página siguiente"
-        >
-          →
-        </button>
+        <div className="book-toolbar__actions">
+          {editing && (
+            <button
+              type="button"
+              className="button"
+              aria-pressed={reordering}
+              onClick={() => {
+                setReordering((r) => !r);
+                setPicked(null);
+              }}
+            >
+              {reordering ? '✓ Reordenando' : 'Reordenar fotos'}
+            </button>
+          )}
+          {onExportPdf && (
+            <details className="book-pdf">
+              <summary className="button">{exporting ? 'Generando PDF…' : 'Descargar PDF'}</summary>
+              <div className="book-pdf__menu">
+                <button
+                  type="button"
+                  className="button"
+                  disabled={exporting}
+                  onClick={() => {
+                    onExportPdf('light');
+                  }}
+                >
+                  Ligero, para ver y compartir (150 ppp)
+                </button>
+                <button
+                  type="button"
+                  className="button"
+                  disabled={exporting}
+                  onClick={() => {
+                    onExportPdf('print');
+                  }}
+                >
+                  Calidad de imprenta (300 ppp)
+                </button>
+                <p className="book-pdf__note">
+                  Incluye portada y contraportada. La primera vez puede tardar unos minutos.
+                </p>
+              </div>
+            </details>
+          )}
+        </div>
       </div>
 
-      <div className="book-stage">
+      <p className="book-status" role="status" aria-live="polite">
+        {status}
+      </p>
+
+      {editing && reordering && (
+        <div className="book-reorder-help">
+          <p>
+            Arrastra una foto sobre otra de la misma página para intercambiarlas, o pulsa una y
+            después la otra. Escape cancela.
+          </p>
+          {customPages.map((page) => (
+            <button
+              key={page.id}
+              type="button"
+              className="button"
+              onClick={() => {
+                editing.onReset(page);
+                setPicked(null);
+              }}
+            >
+              Volver al orden original de la página {page.number}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className="book-stage" ref={stageRef} data-fullscreen={fullscreen || undefined}>
+        {canFullscreen && (
+          <button
+            type="button"
+            className="book-icon-button book-fullscreen"
+            aria-pressed={fullscreen}
+            aria-label={
+              fullscreen ? 'Salir de pantalla completa' : 'Ver el libro a pantalla completa'
+            }
+            title={fullscreen ? 'Salir de pantalla completa (Esc)' : 'Pantalla completa'}
+            onClick={toggleFullscreen}
+          >
+            {fullscreen ? <Collapse /> : <Expand />}
+          </button>
+        )}
+        <button
+          type="button"
+          className="book-icon-button book-arrow book-arrow--prev"
+          onClick={() => {
+            goTo(index - 1);
+          }}
+          disabled={index === 0}
+          aria-label="Página anterior"
+          title="Página anterior (←)"
+        >
+          <ChevronLeft />
+        </button>
+
         <div
           className="book-spread"
           data-mode={wide ? 'spread' : 'single'}
           data-alone={alone || undefined}
+          style={spreadStyle}
         >
-          {(wide && !alone ? [view.left, view.right] : viewPages(view)).map((page, i) =>
+          {(wide && !alone ? [view.left, view.right] : visiblePages).map((page, i) =>
             page ? (
               <BookPage
                 key={page.id}
@@ -162,6 +331,8 @@ export function BookViewer({ book, photosById, places }: BookViewerProps) {
                 format={book.format}
                 photosById={photosById}
                 placeNames={placeNames}
+                imageMode={{ kind: 'screen', pageVw: wide && !alone ? 50 : 100 }}
+                editing={pageEditing(page)}
               />
             ) : (
               <div
@@ -175,6 +346,19 @@ export function BookViewer({ book, photosById, places }: BookViewerProps) {
             ),
           )}
         </div>
+
+        <button
+          type="button"
+          className="book-icon-button book-arrow book-arrow--next"
+          onClick={() => {
+            goTo(index + 1);
+          }}
+          disabled={index === views.length - 1}
+          aria-label="Página siguiente"
+          title="Página siguiente (→)"
+        >
+          <ChevronRight />
+        </button>
       </div>
     </section>
   );

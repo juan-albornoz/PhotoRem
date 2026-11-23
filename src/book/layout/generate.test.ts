@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { SelectionPhoto } from '../../../shared/api.ts';
-import type { Book, Page, PhotoElement } from '../../../shared/book.ts';
+import { pageSignature, type Book, type Page, type PhotoElement } from '../../../shared/book.ts';
 import { bookConfigFixture } from '../../test/fixtures.ts';
 import {
   estimateLines,
@@ -260,5 +260,36 @@ describe('maquetación', () => {
     expect(estimateLines('BURGOS', 265, 22)).toBe(1);
     expect(estimateLines('SANTIAGO DE COMPOSTELA', 265, 18)).toBe(1);
     expect(estimateLines('SANTIAGO DE COMPOSTELA', 120, 18)).toBe(2);
+  });
+});
+
+describe('generateBook: tu orden de fotos', () => {
+  it('aplica el orden guardado de una página y mantiene su plantilla', () => {
+    const data = input();
+    const book = generateBook(data);
+    const page = book.pages.find(
+      (p) => p.kind === 'content' && p.elements.filter((e) => e.type === 'photo').length >= 2,
+    );
+    if (!page) throw new Error('no hay páginas con varias fotos');
+    const original = photoIds([page]);
+    const reversed = [...original].reverse();
+    const custom = generateBook({
+      ...data,
+      overrides: { [pageSignature(original)]: { templateId: page.templateId, order: reversed } },
+    });
+    const same = custom.pages.find((p) => p.number === page.number);
+    expect(same?.templateId).toBe(page.templateId);
+    expect(photoIds(same ? [same] : [])).toEqual(reversed);
+    // El resto del libro no cambia.
+    expect(photoIds(custom.pages).length).toBe(photoIds(book.pages).length);
+  });
+
+  it('ignora un orden guardado que ya no corresponde a ninguna página', () => {
+    const data = input();
+    const book = generateBook({
+      ...data,
+      overrides: { 'x|y': { templateId: 'two-stack', order: ['y', 'x'] } },
+    });
+    expect(photoIds(book.pages)).toEqual(photoIds(generateBook(data).pages));
   });
 });

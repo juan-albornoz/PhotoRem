@@ -47,6 +47,20 @@ la primera vez y nunca se sobrescribe.**
 - **Selección de fotos** (`#/seleccion`): tus 10 fotos por lugar, con filtro por cámara (Canon /
   iPhone). Se guarda sola.
 
+En el libro:
+
+- **Pantalla completa** (icono de las cuatro esquinas, arriba a la derecha del libro): solo el libro,
+  sobre fondo oscuro. Cada foto se pide a la resolución con la que se ve (`srcset` hasta 3840 px,
+  generada desde los originales y guardada en `media/sized/`), así que no pierde calidad.
+- **Flechas** a los lados del libro (y ← → en el teclado).
+- **Reordenar fotos**: dentro de cada página, arrastra una foto sobre otra (o pulsa una y después
+  la otra) para intercambiarlas. Tu orden se guarda en `data/layout.json` (en git, como tu
+  selección); cada página puede volver a su orden original.
+- **Descargar PDF**: ligero (150 ppp) o de imprenta (300 ppp). Chromium imprime la misma maqueta
+  que ves (página `#/imprimir`): texto real con las fuentes incrustadas, cada foto recortada a su
+  hueco sin ampliar nunca por encima del original (`media/crops/`). Incluye portada y
+  contraportada (101 páginas, unos 37 MB el ligero y 126 MB el de imprenta).
+
 El libro tiene formato horizontal (A4 apaisado, 297 × 210 mm), títulos en Oswald y texto en Inter.
 Sus textos, el formato y las fotos de portada y separadores están en `config/book.json`: los
 resúmenes de cada capítulo son un borrador para que los reescribas.

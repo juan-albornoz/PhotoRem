@@ -21,6 +21,8 @@ function stubServer(health: () => Promise<Response>): void {
       if (url.endsWith('/api/health')) return health();
       if (url.endsWith('/api/selection-data'))
         return Promise.resolve(jsonResponse(bookDataFixture()));
+      if (url.endsWith('/api/layout'))
+        return Promise.resolve(jsonResponse({ version: 1, updatedAt: '', pages: {} }));
       if (url.endsWith('/api/book-config'))
         return Promise.resolve(jsonResponse(bookConfigFixture()));
       return Promise.resolve(jsonResponse({ error: 'no encontrado' }, 404));

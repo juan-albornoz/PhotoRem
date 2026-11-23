@@ -5,7 +5,12 @@ import {
   type HealthResponse,
   type SelectionData,
 } from '../../shared/api.ts';
-import { BookConfigSchema, type BookConfig } from '../../shared/book.ts';
+import {
+  BookConfigSchema,
+  LayoutOverridesSchema,
+  type BookConfig,
+  type LayoutOverrides,
+} from '../../shared/book.ts';
 import { SelectionSchema, type Selection } from '../../shared/manifest.ts';
 
 /** Error de la API local con un mensaje pensado para mostrar en pantalla. */
@@ -45,6 +50,37 @@ export async function fetchBookConfig(signal?: AbortSignal): Promise<BookConfig>
   if (!parsed.success)
     throw new ApiError('La configuración del libro no tiene el formato esperado');
   return parsed.data;
+}
+
+export async function fetchLayout(signal?: AbortSignal): Promise<LayoutOverrides> {
+  const response = await fetch('/api/layout', { signal: signal ?? null });
+  if (!response.ok) throw await errorFrom(response);
+  const parsed = LayoutOverridesSchema.safeParse(await response.json());
+  if (!parsed.success) throw new ApiError('El orden de las fotos no tiene el formato esperado');
+  return parsed.data;
+}
+
+export async function saveLayout(layout: LayoutOverrides): Promise<LayoutOverrides> {
+  const response = await fetch('/api/layout', {
+    method: 'PUT',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(layout),
+  });
+  if (!response.ok) throw await errorFrom(response);
+  const parsed = LayoutOverridesSchema.safeParse(await response.json());
+  if (!parsed.success) throw new ApiError('Respuesta inesperada al guardar el orden de las fotos');
+  return parsed.data;
+}
+
+/** Pide al servidor local el PDF del libro (puede tardar unos minutos la primera vez). */
+export async function exportBookPdf(quality: 'print' | 'light'): Promise<Blob> {
+  const response = await fetch('/api/export/pdf', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ quality }),
+  });
+  if (!response.ok) throw await errorFrom(response);
+  return response.blob();
 }
 
 export async function saveSelection(selection: Selection): Promise<Selection> {
